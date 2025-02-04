@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Chart with API Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div>
+        <canvas id="barChartUnique"></canvas>
+    </div>
+
+    <script>
+        // URL API Thingspeak
+        const apiUrl = "https://api.thingspeak.com/channels/2810620/feeds.json?api_key=QJ40OKYZD4PKBCCE&results=1";
+
+        // Inisialisasi chart
+        const ctx = document.getElementById('barChartUnique').getContext('2d');
+        const data = {
+            labels: ['Volume Oli'], // Label di bawah batang
+            datasets: [{
+                label: 'Volume Oli',
+                data: [0], // Default nilai awal, akan diperbarui dengan data API
+                backgroundColor: 'rgba(75, 192, 192, 0.5)', // Warna batang
+                borderColor: 'rgba(75, 192, 192, 1)', // Warna border batang
+                borderWidth: 1 // Ketebalan border batang
+            }]
+        };
+
+        const config = {
+            type: 'bar',
+            data: data,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1000000 // Langkah besar untuk sumbu Y (disesuaikan dengan data volume)
+                        }
+                    }
+                }
+            }
+        };
+
+        const chart = new Chart(ctx, config);
+
+        // Fungsi untuk mengambil data dari API
+        async function fetchDataAndUpdateChart() {
+            try {
+                const response = await fetch(apiUrl);
+                const apiData = await response.json();
+
+                // Ambil nilai dari field2 (Volume)
+                const volumeOli = parseFloat(apiData.feeds[0].field2);
+
+                // Update data pada chart
+                chart.data.datasets[0].data[0] = volumeOli; // Update nilai batang pertama
+                chart.update(); // Render ulang chart dengan data baru
+            } catch (error) {
+                console.error("Gagal mengambil data API:", error);
+            }
+        }
+
+        // Panggil fungsi untuk fetch data dan memperbarui chart
+        fetchDataAndUpdateChart();
+
+        // Jika ingin update otomatis setiap beberapa detik:
+        setInterval(fetchDataAndUpdateChart, 10000); // Update setiap 10 detik
+    </script>
+</body>
+
+</html>
